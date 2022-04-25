@@ -30,6 +30,10 @@ static bool terminal_execute(char *terminal, char *command) {
 	chmod(fname, S_IRUSR | S_IWUSR | S_IXUSR);
 	size_t cmd_size = strlen(terminal) + strlen(" -e ") + strlen(fname) + 1;
 	char *cmd = malloc(cmd_size);
+	if (!cmd) {
+		perror("malloc");
+		return false;
+	}
 	snprintf(cmd, cmd_size, "%s -e %s", terminal, fname);
 	execlp("sh", "sh", "-c", cmd, NULL);
 	sway_log_errno(SWAY_ERROR, "Failed to run command, execlp() returned.");
@@ -59,7 +63,7 @@ static void swaynag_button_execute(struct swaynag *swaynag,
 			} else if (pid == 0) {
 				// Child of the child. Will be reparented to the init process
 				char *terminal = getenv("TERMINAL");
-				if (button->terminal && terminal && strlen(terminal)) {
+				if (button->terminal && terminal && *terminal) {
 					sway_log(SWAY_DEBUG, "Found $TERMINAL: %s", terminal);
 					if (!terminal_execute(terminal, button->action)) {
 						swaynag_destroy(swaynag);
@@ -139,7 +143,7 @@ static void update_cursor(struct swaynag_seat *seat) {
 	const char *cursor_theme = getenv("XCURSOR_THEME");
 	unsigned cursor_size = 24;
 	const char *env_cursor_size = getenv("XCURSOR_SIZE");
-	if (env_cursor_size && strlen(env_cursor_size) > 0) {
+	if (env_cursor_size && *env_cursor_size) {
 		errno = 0;
 		char *end;
 		unsigned size = strtoul(env_cursor_size, &end, 10);
@@ -340,6 +344,7 @@ static void handle_global(void *data, struct wl_registry *registry,
 		struct swaynag_seat *seat =
 			calloc(1, sizeof(struct swaynag_seat));
 		if (!seat) {
+			perror("calloc");
 			return;
 		}
 
@@ -357,6 +362,10 @@ static void handle_global(void *data, struct wl_registry *registry,
 		if (!swaynag->output) {
 			struct swaynag_output *output =
 				calloc(1, sizeof(struct swaynag_output));
+			if (!output) {
+				perror("calloc");
+				return;
+			}
 			output->wl_output = wl_registry_bind(registry, name,
 					&wl_output_interface, 4);
 			output->wl_name = name;

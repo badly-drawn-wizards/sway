@@ -45,7 +45,7 @@ subproject(
 )
 
 jsonc = dependency('json-c', version: '>=0.13')
-pcre = dependency('libpcre')
+pcre2 = dependency('libpcre2-8')
 wayland_server = dependency('wayland-server', version: '>=1.20.0')
 wayland_client = dependency('wayland-client')
 wayland_cursor = dependency('wayland-cursor')
@@ -69,6 +69,7 @@ bash_comp = dependency('bash-completion', required: false)
 fish_comp = dependency('fish', required: false)
 math = cc.find_library('m')
 rt = cc.find_library('rt')
+xcb_icccm = dependency('xcb-icccm', required: get_option('xwayland'))
 
 wlroots_features = {
 	'xwayland': false,
